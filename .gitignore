@@ -1,0 +1,24 @@
+# Local helper scripts
+buildandrun.sh
+
+# Tooling
+compile_commands.json
+.clangd
+.idea/
+.vscode/
+.cache/
+.direnv/
+
+# Build outputs
+build/
+.build/
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+
+# Nix
+result/
+result
+enhance_compile_commands.py
