@@ -162,10 +162,15 @@ void writeStringToCbmScreen(struct cbmScreen* screen, struct cbmScreenPosition s
     unsigned char* screencodeString = petsciiStringToScreencodeString(petsciiString);
     size_t stringStartIndex = screenPosition.row * CBM_SCREEN_COLUMNS + screenPosition.column;
     size_t currentPosition = 0;
+    size_t stringScreenOffset = 0;
     char currentScreencode = screencodeString[currentPosition];
     while(currentScreencode != '\0') {
-        screen->chars[stringStartIndex+currentPosition] = currentScreencode;
-        screen->colors[stringStartIndex+currentPosition] = palletColor;
+        if(currentScreencode == '\n') {
+            stringScreenOffset += CBM_SCREEN_COLUMNS - currentPosition % CBM_SCREEN_COLUMNS -1;
+        }else{
+            screen->chars[stringStartIndex+currentPosition+stringScreenOffset] = currentScreencode;
+            screen->colors[stringStartIndex+currentPosition+stringScreenOffset] = palletColor;
+        }
         currentPosition++;
         currentScreencode = screencodeString[currentPosition];
     }
