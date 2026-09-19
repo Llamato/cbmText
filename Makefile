@@ -4,6 +4,11 @@ CFLAGS = -g
 CPPFLAGS = -I. -Iglibs
 LDFLAGS = -lglfw -lm
 
+# Install configuration
+NAME    ?= demo
+PREFIX  ?= /usr/local
+DESTDIR ?=
+
 # Targets
 TARGET = build/demo
 CBMCHARGEN = build/cbmchargen
@@ -12,13 +17,12 @@ CBMCHARGEN = build/cbmchargen
 GLAD_SOURCES = libs/glad/glad.c
 COMMON_GLIB_SOURCES = libs/common.c
 CBMCHARGEN_SOURCES = cbmcharmode.c
-DEMO_SOURCES = $(GLAD_SOURCES) $(COMMON_GLIB_SOURCES) $(CBMCHARGEN_SOURCES) main.c 
+DEMO_SOURCES = $(GLAD_SOURCES) $(COMMON_GLIB_SOURCES) $(CBMCHARGEN_SOURCES) main.c
 
 # Object files for each target
 DEMO_OBJS = $(DEMO_SOURCES:.c=.o)
 COMMON_GLIB_OBJS = $(COMMON_GLIB_SOURCES:.c=.o)
 CBMCHARGEN_OBJS = $(CBMCHARGEN_SOURCES:.c=.o)
-
 
 # Default target
 all: $(TARGET)
@@ -32,6 +36,10 @@ $(TARGET): $(DEMO_OBJS)
 %.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
 
+# Install demo binary into /bin
+install: $(TARGET)
+	install -D --mode=755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/$(NAME)
+
 # Clean build artifacts
 clean:
 	rm -f $(DEMO_OBJS) $(CBMCHARGEN_OBJS) $(TARGET) $(CBMCHARGEN)
@@ -41,4 +49,4 @@ clean:
 test: $(CBMCHARGEN)
 
 # Phony targets
-.PHONY: all clean test
+.PHONY: all clean test install
