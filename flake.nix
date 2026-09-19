@@ -1,9 +1,15 @@
 {
   description = "An OpenGL text rendering engine using commodore vdc character roms to make characters";
 
-  outputs = { nixpkgs, ... }:
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs =
+    { nixpkgs, ... }@inputs:
     let
-      systems = [
+      supportedSystems = [
         "x86_64-linux"
         "aarch64-linux"
         "x86_64-darwin"
@@ -12,84 +18,56 @@
         "riscv64-linux"
       ];
 
-      forAllSystems = nixpkgs.lib.genAttrs systems;
-      pkgsFor = system: import nixpkgs { inherit system; };
-    in {
-      packages = forAllSystems (system:
-        let pkgs = pkgsFor system; in {
-          demo = pkgs.gcc14Stdenv.mkDerivation {
-            pname = "cbmtext";
-            version = "0.1.0";
-            src = pkgs.lib.cleanSource ./.;
-            nativeBuildInputs = with pkgs; [
-              gnumake
-              keepBuildTree
-              pkg-config
+    in
+    inputs.flake-utils.lib.eachSystem supportedSystems (
+      system:
+      let
+        pkgs = import nixpkgs { inherit system; };
+        lib = pkgs.lib;
+        cbmTextBuildInputs = with pkgs; [
+          gnumake
+        ];
+        cbmTextNativeBuildInputs = with pkgs; [
+          (glfw.overrideAttrs {
+            cmakeFlags = [
+              (lib.cmakeBool "GLFW_BUILD_WAYLAND" false)
+              (lib.cmakeBool "BUILD_SHARED_LIBS" true)
             ];
-
-            buildInputs = with pkgs; [
-              (glfw.overrideAttrs { cmakeFlags = [
-                (lib.cmakeBool "GLFW_BUILD_WAYLAND" false)
-                (lib.cmakeBool "BUILD_SHARED_LIBS" true)
-              ];})
-              libGL
-              libGLU
-              mesa
-              libglvnd
-              libX11
-              libc
-            ];
-
-            installPhase = ''
-              mkdir -p $out/bin
-              cp build/demo $out/bin/cbmtextdemo
-            '';
-            
-            meta = with pkgs.lib; {
-              description = "An OpenGL native space trading game";
-              homepage = "http://www.github.com/Llamato/Spacer3000";
-              mainProgram = "spacer3000";
-              platforms = platforms.unix;
-            };
-          };
-        }
-      );
-      devShells = forAllSystems (system:
-        let 
-          pkgs = pkgsFor system;
-          devTools = with pkgs; [
-              gnumake
-              gcc
-              gdb
-              clang-tools
-              bear
-              bun
-            ];
-        in let
-          defaultShellHook = ''
-            CC=${pkgs.gcc}/bin/gcc
-            echo "CC:" $CC
-            CXX=${pkgs.gcc}/bin/g++
-            echo "CXX:" $CXX
-          '';
-        in {
-          default = pkgs.mkShell {
-            buildInputs = with pkgs; [
-              (glfw.overrideAttrs { cmakeFlags = [
-                (lib.cmakeBool "GLFW_BUILD_WAYLAND" false)
-                (lib.cmakeBool "BUILD_SHARED_LIBS" true)
-              ];})
-              libGL
-              libGLU
-              mesa
-              libglvnd
-              libX11
-              libc
-            ];
-            packages = devTools;
-            shellHook = defaultShellHook;
-          };
-        }
-      );
-    };
+          })
+          libGL
+          libGLU
+          mesa
+          libglvnd
+          libX11
+          libc
+        ];
+        cbmTextDemo = pkgs.stdenv.mkDerivation {
+          name = "cbmTextDemo";
+          version = "0.0.1";
+          src = ./.;
+          buildInputs = cbmTextBuildInputs;
+          nativeBuildInputs = cbmTextNativeBuildInputs;
+          installFlags = [ "PREFIX=${placeholder "out"}" ];
+        };
+      in
+      {
+        packages = {
+          inherit cbmTextDemo;
+          default = cbmTextDemo;
+        };
+        apps.default = {
+          type = "app";
+          program = "${cbmTextDemo}/bin/demo";
+        };
+        devShells.default = pkgs.mkShell {
+          inputsFrom = [ cbmTextDemo ];
+          packages = with pkgs; [
+            gcc
+            gdb
+            clang-tools
+            bear
+          ];
+        };
+      }
+    );
 }
