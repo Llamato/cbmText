@@ -12,7 +12,6 @@
       supportedSystems = [
         "x86_64-linux"
         "aarch64-linux"
-        "x86_64-darwin"
         "aarch64-darwin"
         "armv7l-linux"
         "riscv64-linux"
@@ -22,11 +21,18 @@
     inputs.flake-utils.lib.eachSystem supportedSystems (
       system:
       let
+        cbmTextDescription = "An OpenGL text rendering engine using commodore vdc character roms to make characters";
         pkgs = import nixpkgs { inherit system; };
         lib = pkgs.lib;
         cbmTextBuildInputs = with pkgs; [
           gnumake
         ];
+        cbmTextMeta = {
+          description = cbmTextDescription;
+          license = lib.licenses.mit;
+          platforms = lib.platforms.unix;
+          #maintainers = with lib.maintainers; [ llamato ];
+        };
         cbmTextNativeBuildInputs = with pkgs; [
           (glfw.overrideAttrs {
             cmakeFlags = [
@@ -48,23 +54,18 @@
           buildInputs = cbmTextBuildInputs;
           nativeBuildInputs = cbmTextNativeBuildInputs;
           installFlags = [ "PREFIX=${placeholder "out"}" ];
+          meta = cbmTextMeta;
         };
       in
       {
         packages = {
           inherit cbmTextDemo;
           default = cbmTextDemo;
-          meta = {
-            description = "An OpenGL text rendering engine using commodore vdc character roms to make characters";
-            license = lib.licenses.mit;
-            #maintainers = with lib.maintainers; [ llamato ];
-
-          };
         };
         apps.default = {
           type = "app";
           program = "${cbmTextDemo}/bin/demo";
-          platforms = lib.platforms.all;
+          meta = cbmTextMeta;
         };
         devShells.default = pkgs.mkShell {
           inputsFrom = [ cbmTextDemo ];
