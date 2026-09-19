@@ -1,8 +1,5 @@
-let 
-  description = "An OpenGL text rendering engine using commodore vdc character roms to make characters";
-in
 {
-  inherit description;
+  description = "An OpenGL text rendering engine using commodore vdc character roms to make characters";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -58,7 +55,7 @@ in
           inherit cbmTextDemo;
           default = cbmTextDemo;
           meta = {
-            inherit description;
+            description = "An OpenGL text rendering engine using commodore vdc character roms to make characters";
             license = lib.licenses.mit;
             #maintainers = with lib.maintainers; [ llamato ];
 
