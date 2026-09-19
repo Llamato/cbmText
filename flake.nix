@@ -1,5 +1,8 @@
-{
+let 
   description = "An OpenGL text rendering engine using commodore vdc character roms to make characters";
+in
+{
+  inherit description;
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -54,10 +57,17 @@
         packages = {
           inherit cbmTextDemo;
           default = cbmTextDemo;
+          meta = {
+            inherit description;
+            license = lib.licenses.mit;
+            #maintainers = with lib.maintainers; [ llamato ];
+
+          };
         };
         apps.default = {
           type = "app";
           program = "${cbmTextDemo}/bin/demo";
+          platforms = lib.platforms.all;
         };
         devShells.default = pkgs.mkShell {
           inputsFrom = [ cbmTextDemo ];
